@@ -18,3 +18,12 @@ __pycache__/
 
 # AutoPkg
 report.plist
+
+# Terraform
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/terraform.tfvars
+
+# uv
+uv.lock
