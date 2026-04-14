@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>_metadata</key>
+	<dict>
+		<key>created_by</key>
+		<string>ben.goodstein</string>
+		<key>creation_date</key>
+		<date>2026-04-14T18:50:12Z</date>
+		<key>munki_version</key>
+		<string>6.6.4.4708</string>
+		<key>os_version</key>
+		<string>26.4</string>
+	</dict>
+	<key>autoremove</key>
+	<false/>
+	<key>catalogs</key>
+	<array>
+		<string>testing</string>
+	</array>
+	<key>description</key>
+	<string>Mozilla Firefox is a free and open source web browser.</string>
+	<key>developer</key>
+	<string>Mozilla</string>
+	<key>display_name</key>
+	<string>Mozilla Firefox</string>
+	<key>installcheck_script</key>
+	<string>#!/bin/zsh --no-rcs
+
+# Copyright 2025, Jamf Software, LLC.
+
+#
+# DESCRIPTION
+#
+# Checks Firefox locale and version. Exits 0 to install if Firefox is not installed,
+# locale cannot be determined, or version is older with matching locale. Exits 1 to
+# cancel if locales don't match or version is same/newer with matching locale.
+#
+# Uses unzip command to extract locale information from omni.ja file.
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1936505
+
+# Function to compare version strings using sort -V
+compare_versions() {
+    local version1="$1"
+    local version2="$2"
+
+    # Use sort -V to compare versions
+    local sorted_first=$(printf '%s\n%s\n' "$version1" "$version2" | sort -V | head -n1)
+
+    if [[ "$sorted_first" == "$version1" ]] &amp;&amp; [[ "$version1" != "$version2" ]]; then
+        # version1 is strictly less than version2
+        return 0
+    else
+        # version1 is greater than or equal to version2
+        return 1
+    fi
+}
+
+# Function to extract locale from omni.ja file
+get_firefox_locale() {
+    local firefox_path="$1"
+    local omni_path="$firefox_path/Contents/Resources/omni.ja"
+
+    if [[ ! -f "$omni_path" ]]; then
+        echo "Cannot find $omni_path"
+        return 1
+    fi
+
+    # Extract locale using unzip
+    local locale=$(unzip -p "$omni_path" default.locale 2&gt;/dev/null | tr -d '\r\n')
+
+    if [[ -z "$locale" ]]; then
+        echo "Empty locale returned from omni.ja"
+        return 1
+    fi
+
+    echo "$locale"
+    return 0
+}
+
+# Variable declaration
+firefox_path="/Applications/Firefox.app"
+firefox_info_plist="$firefox_path/Contents/Info.plist"
+firefox_locale="en-GB"
+firefox_version="149.0.2"
+
+# If Firefox.app is not installed, proceed with installation
+if [[ ! -d "$firefox_path" ]]; then
+    echo "$firefox_path not installed, proceeding with installation..."
+    exit 0
+fi
+
+# Get installed Firefox locale
+if installed_locale=$(get_firefox_locale "$firefox_path"); then
+    echo "Installed locale: $installed_locale"
+    echo "Package locale: $firefox_locale"
+
+    # If locales don't match, cancel installation
+    if [[ "$installed_locale" != "$firefox_locale" ]]; then
+        echo "Installed locale ($installed_locale) differs from package locale ($firefox_locale)"
+        echo "Cancelling installation..."
+        exit 1
+    fi
+else
+    echo "Could not determine installed Firefox locale, proceeding with installation..."
+    exit 0
+fi
+
+# Locales match, check version
+if [[ -f "$firefox_info_plist" ]]; then
+    # Extract version from Info.plist using plutil
+    if installed_version=$(plutil -extract CFBundleShortVersionString raw "$firefox_info_plist" 2&gt;/dev/null); then
+        echo "Installed version: $installed_version"
+        echo "Package version: $firefox_version"
+
+        if compare_versions "$installed_version" "$firefox_version"; then
+            echo "Installed version is older, proceeding with installation..."
+            exit 0
+        else
+            echo "Installed version is same or newer, cancelling installation..."
+            exit 1
+        fi
+    else
+        echo "Error reading version info, proceeding with installation..."
+        exit 0
+    fi
+else
+    echo "Cannot find $firefox_info_plist, proceeding with installation..."
+    exit 0
+fi
+
+
+if __name__ == '__main__':
+    main()</string>
+	<key>installer_item_hash</key>
+	<string>e4fec96ba9d5e899513e55199c3de77387833f2bc0ae593e6467ddcdb8dfd306</string>
+	<key>installer_item_location</key>
+	<string>apps/firefox/Firefox_en-GB-149.0.2.dmg</string>
+	<key>installer_item_size</key>
+	<integer>146656</integer>
+	<key>installer_type</key>
+	<string>copy_from_dmg</string>
+	<key>installs</key>
+	<array>
+		<dict>
+			<key>CFBundleIdentifier</key>
+			<string>org.mozilla.firefox</string>
+			<key>CFBundleName</key>
+			<string>Firefox</string>
+			<key>CFBundleShortVersionString</key>
+			<string>149.0.2</string>
+			<key>CFBundleVersion</key>
+			<string>14926.4.3</string>
+			<key>minosversion</key>
+			<string>10.15.0</string>
+			<key>path</key>
+			<string>/Applications/Firefox.app</string>
+			<key>type</key>
+			<string>application</string>
+			<key>version_comparison_key</key>
+			<string>CFBundleShortVersionString</string>
+		</dict>
+	</array>
+	<key>items_to_copy</key>
+	<array>
+		<dict>
+			<key>destination_path</key>
+			<string>/Applications</string>
+			<key>source_item</key>
+			<string>Firefox.app</string>
+		</dict>
+	</array>
+	<key>minimum_os_version</key>
+	<string>10.15.0</string>
+	<key>name</key>
+	<string>Firefox_en-GB</string>
+	<key>unattended_install</key>
+	<true/>
+	<key>unattended_uninstall</key>
+	<true/>
+	<key>uninstall_method</key>
+	<string>remove_copied_items</string>
+	<key>uninstallable</key>
+	<true/>
+	<key>version</key>
+	<string>149.0.2</string>
+</dict>
+</plist>
