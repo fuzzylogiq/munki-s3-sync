@@ -1,0 +1,4 @@
+#!/bin/bash
+# pre-auto-gc hook: prunes unreferenced binaries automatically
+# during git garbage collection.
+uv run bin/pkg_sync.py -m prune -r "$(pwd)/munki_repo"

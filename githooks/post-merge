@@ -1,0 +1,16 @@
+#!/bin/bash
+# Post-merge hook: downloads new pkgs from S3 after pulling/merging
+# when new pkgsinfo files were added.
+#
+# Set the following environment variables:
+#   AWS_PROFILE  - your AWS SSO profile name
+#   S3_BUCKET    - the S3 bucket used for content-addressable pkg storage
+
+new_pkgsinfos=$(git diff --diff-filter=A --name-only ORIG_HEAD HEAD -- munki_repo/pkgsinfo/)
+
+if [ -n "$new_pkgsinfos" ]; then
+    echo "New pkgsinfo found, syncing pkgs from S3"
+    uv run bin/pkg_sync.py -m download -r "$(pwd)/munki_repo" -b "$S3_BUCKET"
+else
+    echo "No new pkgsinfo files, skipping pkg sync"
+fi

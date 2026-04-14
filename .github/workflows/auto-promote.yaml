@@ -1,0 +1,37 @@
+name: Auto Promote Pkgs
+
+on:
+  schedule:
+    - cron: "0 10 * * MON-FRI"  # Weekdays at 10 AM UTC
+  workflow_dispatch:
+
+jobs:
+  auto-promote:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Checkout Munki
+        uses: actions/checkout@v4
+        with:
+          repository: 'munki/munki'
+          ref: 'main'  # pin to a specific tag/commit for reproducibility
+          path: munki
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Run makecatalogs
+        run: uv run python munki/code/client/makecatalogs -s -f munki_repo
+
+      - name: Run auto promotion
+        run: |
+          git config --global user.name "Auto Promoter"
+          uv run bin/auto_promotion.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

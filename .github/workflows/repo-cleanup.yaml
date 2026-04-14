@@ -1,0 +1,60 @@
+name: Auto Repoclean
+
+on:
+  schedule:
+    - cron: "0 9 28 * *"  # 28th of each month
+  workflow_dispatch:
+
+jobs:
+  repoclean:
+    runs-on: macos-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - name: Install Munki
+        run: |
+          curl -OL https://github.com/munki/munki/releases/download/v6.6.4/munkitools-6.6.4.4708.pkg
+          sudo installer -pkg munkitools-6.6.4.4708.pkg -target /
+          sudo rm munkitools-6.6.4.4708.pkg
+
+      # repoclean -a removes all old versions, -k N keeps the N most recent.
+      # Adjust -k to your retention needs.
+      - name: Run repoclean
+        run: |
+          /usr/local/munki/repoclean -a -k 3 --repo_url "file://$GITHUB_WORKSPACE/munki_repo"
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create branch, commit, and PR
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          BRANCH="auto-repoclean-${DATE}-${SHORT_SHA}"
+          git config --global user.name "Auto Repoclean"
+          git checkout -b "$BRANCH"
+          git add munki_repo/pkgsinfo/
+          git commit -m "repoclean: removing old pkgsinfo items (keep 3)"
+          git push --set-upstream origin "$BRANCH"
+          gh pr create \
+            -B main \
+            -H "$BRANCH" \
+            -t "Auto Repoclean: $DATE" \
+            -b "Automated monthly repo cleanup via repoclean. Removes old pkgsinfo items, keeping the 3 most recent versions of each package."
+          gh pr merge --auto --rebase "$BRANCH"

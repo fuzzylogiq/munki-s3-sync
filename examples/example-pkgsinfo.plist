@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>_metadata</key>
+	<dict>
+		<key>created_by</key>
+		<string>autopkg</string>
+		<key>creation_date</key>
+		<date>2025-01-15T09:00:00Z</date>
+		<key>munki_version</key>
+		<string>6.7.0</string>
+		<key>os_version</key>
+		<string>14.7.2</string>
+	</dict>
+	<!--
+	    _autopromotion_catalogs: defines time-based catalog promotion.
+	    Keys are the number of days after creation_date to promote.
+	    Values are the catalog list to set at that time.
+
+	    In this example:
+	      - Day 0: package starts in "earlyaccess" (set by catalogs key below)
+	      - Day 3: auto_promotion.py promotes it to "production"
+	-->
+	<key>_autopromotion_catalogs</key>
+	<dict>
+		<key>3</key>
+		<array>
+			<string>production</string>
+		</array>
+	</dict>
+	<key>catalogs</key>
+	<array>
+		<string>earlyaccess</string>
+	</array>
+	<key>category</key>
+	<string>Productivity</string>
+	<key>description</key>
+	<string>An example application.</string>
+	<key>display_name</key>
+	<string>ExampleApp</string>
+	<key>installer_item_hash</key>
+	<string>a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2</string>
+	<key>installer_item_location</key>
+	<string>apps/ExampleApp-1.0.0.pkg</string>
+	<key>installer_item_size</key>
+	<integer>51200</integer>
+	<key>minimum_os_version</key>
+	<string>13.0</string>
+	<key>name</key>
+	<string>ExampleApp</string>
+	<key>version</key>
+	<string>1.0.0</string>
+</dict>
+</plist>

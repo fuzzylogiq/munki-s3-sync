@@ -1,0 +1,12 @@
+[project]
+name = "munki-s3-sync"
+version = "0.1.0"
+description = "Content-addressable S3 storage, AutoPkg automation, and catalog promotion for Munki repos"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+dependencies = [
+    "boto3>=1.36.13",
+    "pyyaml>=6.0.2",
+    "requests>=2.33.0",
+    "rich>=14.3.3",
+]

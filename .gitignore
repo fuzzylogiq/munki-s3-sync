@@ -1,0 +1,20 @@
+# Munki repo - binaries and generated catalogs
+munki_repo/pkgs/*
+munki_repo/catalogs/*
+!munki_repo/pkgs/.keep
+!munki_repo/catalogs/.keep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# AutoPkg
+report.plist

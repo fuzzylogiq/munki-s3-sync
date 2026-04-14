@@ -1,0 +1,25 @@
+#!/bin/bash
+# Pre-push hook: uploads new pkgs to S3 when pkgsinfo changes are pushed.
+#
+# Set the following environment variables (or export them in your shell profile):
+#   AWS_PROFILE  - your AWS SSO profile name
+#   S3_BUCKET    - the S3 bucket used for content-addressable pkg storage
+
+remote="$1"
+remote_url="$2"
+
+local_branch=$(git symbolic-ref --short HEAD)
+remote_branch="refs/heads/$local_branch"
+
+git fetch $remote
+
+files=$(git diff --diff-filter=A --name-only $remote/main..$local_branch)
+
+if [ -z "$files" ]; then
+    exit 0
+elif echo "$files" | grep -q "munki_repo/pkgsinfo/"; then
+    echo "New pkgsinfo found, syncing pkgs to S3"
+    uv run bin/pkg_sync.py -m upload -r "$(pwd)/munki_repo" -b "$S3_BUCKET"
+else
+    echo "pkgsinfo unchanged, no need to sync"
+fi

@@ -1,0 +1,82 @@
+name: Build and Sync Repo
+run-name: Build and sync munki repo for ${{github.sha}}
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - 'munki_repo/pkgs/**'
+            - 'munki_repo/pkgsinfo/**'
+            - 'munki_repo/manifests/**'
+            - 'munki_repo/client_resources/**'
+    workflow_dispatch:
+      inputs:
+        sync-all:
+          description: 'Sync all pkgs regardless of changes'
+          type: boolean
+          required: false
+
+jobs:
+    build-and-sync:
+        runs-on: ubuntu-latest
+        permissions:
+            id-token: write
+            contents: read
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+            - name: Checkout munki
+              uses: actions/checkout@v4
+              with:
+                repository: 'munki/munki'
+                ref: 'main'  # pin to a specific tag/commit for reproducibility
+                path: 'munki'
+            - name: Get changed pkgsinfo
+              id: changed-files
+              uses: tj-actions/changed-files@v45
+              with:
+                files: munki_repo/pkgsinfo/**
+                separator: ","
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+            - name: Install uv
+              uses: astral-sh/setup-uv@v6
+            - name: Download all pkgs
+              if: ${{ inputs.sync-all == true }}
+              run: |
+                uv run bin/pkg_sync.py -m download -r ${GITHUB_WORKSPACE}/munki_repo -b ${{ secrets.S3_STORAGE_BUCKET }} -v
+            - name: Download pkgs
+              env:
+                CHANGED_PKGSINFO: ${{ steps.changed-files.outputs.all_changed_files }}
+              if: ${{ inputs.sync-all == false }}
+              run: |
+                oldIFS=$IFS
+                IFS=","
+                pkgsinfo=($CHANGED_PKGSINFO)
+                IFS=$oldIFS
+                for file in "${pkgsinfo[@]}"; do
+                    uv run bin/pkg_sync.py -m download -r ${GITHUB_WORKSPACE}/munki_repo -b ${{ secrets.S3_STORAGE_BUCKET }} -v -f "$file"
+                done
+            - name: Run makecatalogs
+              run: |
+                uv run python munki/code/client/makecatalogs -s -f $GITHUB_WORKSPACE/munki_repo
+            # Sync the built repo to a serving bucket (e.g. behind CloudFront).
+            # Adjust the destination bucket and paths for your environment.
+            - name: Sync pkgs
+              run: |
+                aws s3 sync --no-progress $GITHUB_WORKSPACE/munki_repo/pkgs/ s3://${{ secrets.S3_REPO_BUCKET }}/pkgs/
+            - name: Sync icons
+              run: |
+                aws s3 sync --no-progress $GITHUB_WORKSPACE/munki_repo/icons/ s3://${{ secrets.S3_REPO_BUCKET }}/icons/
+            - name: Sync catalogs
+              run: |
+                aws s3 sync --no-progress $GITHUB_WORKSPACE/munki_repo/catalogs/ s3://${{ secrets.S3_REPO_BUCKET }}/catalogs/
+            - name: Sync manifests
+              run: |
+                aws s3 sync --no-progress $GITHUB_WORKSPACE/munki_repo/manifests/ s3://${{ secrets.S3_REPO_BUCKET }}/manifests/
+            - name: Sync client_resources
+              run: |
+                aws s3 sync --no-progress $GITHUB_WORKSPACE/munki_repo/client_resources/ s3://${{ secrets.S3_REPO_BUCKET }}/client_resources/

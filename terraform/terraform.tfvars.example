@@ -1,0 +1,11 @@
+aws_region          = "us-east-1"
+storage_bucket_name = "my-org-munki-storage"
+repo_bucket_name    = "my-org-munki-repo"
+github_org          = "my-org"
+github_repo         = "munki-s3-sync"
+
+# CloudFront price class:
+#   PriceClass_100 = US, Canada, Europe (cheapest)
+#   PriceClass_200 = + Asia, Middle East, Africa
+#   PriceClass_All = all edge locations
+cloudfront_price_class = "PriceClass_100"
