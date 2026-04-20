@@ -29,7 +29,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                 repository: 'munki/munki'
-                ref: '6b4ad647c4b863709a4cff85596684d3620b426f'  # last commit with Python makecatalogs
+                ref: 40364d223b91cceafe68556ef4fa52331678c3ef # v6.7.0
                 path: 'munki'
             - name: Get changed pkgsinfo
               id: changed-files
