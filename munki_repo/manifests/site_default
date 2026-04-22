@@ -7,10 +7,6 @@
 		<string>testing</string>
 	</array>
 	<key>managed_installs</key>
-	<array>
-		<string>AdobeReader</string>
-		<string>Firefox_en-GB</string>
-		<string>GoogleChrome</string>
-	</array>
+	<array/>
 </dict>
 </plist>
