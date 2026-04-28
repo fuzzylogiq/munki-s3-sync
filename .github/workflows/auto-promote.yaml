@@ -1,8 +1,9 @@
 name: Auto Promote Pkgs
 
 on:
-  schedule:
-    - cron: "0 10 * * MON-FRI"  # Weekdays at 10 AM UTC
+  # Uncomment the schedule to run recurringly
+  # schedule:
+  #  - cron: "0 10 * * MON-FRI"  # Weekdays at 10 AM UTC
   workflow_dispatch:
 
 jobs:
