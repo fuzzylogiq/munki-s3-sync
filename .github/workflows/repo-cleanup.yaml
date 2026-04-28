@@ -1,8 +1,9 @@
 name: Auto Repoclean
 
 on:
-  schedule:
-    - cron: "0 9 28 * *"  # 28th of each month
+ # Uncomment the schedule to run recurringly
+ # schedule:
+ #   - cron: "0 9 28 * *"  # 28th of each month
   workflow_dispatch:
 
 jobs:
