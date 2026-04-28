@@ -8,6 +8,7 @@ on:
             - 'munki_repo/pkgs/**'
             - 'munki_repo/pkgsinfo/**'
             - 'munki_repo/manifests/**'
+            - 'munki_repo/icons/**'
             - 'munki_repo/client_resources/**'
     workflow_dispatch:
       inputs:
