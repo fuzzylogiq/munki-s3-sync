@@ -1,8 +1,9 @@
 name: Run Autopkg
 
 on:
-  schedule:
-    - cron: "0 9 * * TUE"  # Weekly on Tuesdays at 9 AM UTC
+# Uncomment the schedule to run recurringly
+#  schedule:
+#    - cron: "0 9 * * TUE"  # Weekly on Tuesdays at 9 AM UTC
 
   workflow_dispatch:
     inputs:
